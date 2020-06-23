@@ -21,22 +21,17 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse;">
     <tr>
-        <td align="center" bgcolor="#78ab46" style="padding: 40px 0 30px 0;">
-            <img src="cid:logo.jpg" alt="https://memorynotfound.com" style="display: block;"/>
-        </td>
-    </tr>
-    <tr>
         <td bgcolor="#eaeaea" style="padding: 40px 30px 40px 30px;">
-            <p>Dear ${name},</p>
-            <p>Sending Email using Spring Boot with <b>FreeMarker template !!!</b></p>
+            <p>Dear <b> ${name} </b>,</p>
+            <p>Please confirm your registration on <b>САЙТЕ НЕДВИЖИМОСТИ</b></p>
             <p>Thanks</p>
         </td>
     </tr>
     <tr>
         <td bgcolor="#777777" style="padding: 30px 30px 30px 30px;">
+            <p><b><a href=${link}>Подвердить регистрацию </a></b></p>
             <p>${signature}</p>
             <p>${location}</p>
-            <p><a href=${link}>Подвердить регистрацию </a></p>
         </td>
     </tr>
 </table>

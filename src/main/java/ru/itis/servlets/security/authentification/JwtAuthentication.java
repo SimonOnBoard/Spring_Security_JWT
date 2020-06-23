@@ -1,11 +1,13 @@
 package ru.itis.servlets.security.authentification;
 
+import lombok.Data;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import ru.itis.servlets.security.defails.UserDetailsImpl;
 
 import java.util.Collection;
 
+@Data
 public class JwtAuthentication implements Authentication {
     private boolean isAuthenticated = false;
     // токен

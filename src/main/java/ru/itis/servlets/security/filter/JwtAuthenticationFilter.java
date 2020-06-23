@@ -1,7 +1,13 @@
 package ru.itis.servlets.security.filter;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
+import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 import ru.itis.servlets.security.authentification.JwtAuthentication;
@@ -12,16 +18,22 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Component( "jwtAuthenticationFilter")
-public class JwtAuthenticationFilter extends GenericFilterBean {
+public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
+
+    public JwtAuthenticationFilter() {
+        super("/**");
+    }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest)servletRequest;
+    protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
+        return true;
+    }
 
-
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse httpServletResponse) throws AuthenticationException, IOException, ServletException {
         Cookie[] cookies = request.getCookies();
         String token = null;
         if (cookies != null) {
@@ -31,13 +43,25 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
                 }
             }
         }
-        if(token != null) {
-            // создаем объект аутентификации
+        if (token != null) {
             Authentication authentication = new JwtAuthentication(token);
-            // кладем его в контекст для текущего потока
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return getAuthenticationManager().authenticate(authentication);
+        } else {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            return authentication;
         }
-        // отправили запрос дальше
-        filterChain.doFilter(servletRequest, servletResponse);
     }
+
+    @Override
+    protected void successfulAuthentication(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain, final Authentication authResult) throws
+            IOException, ServletException {
+        SecurityContextHolder.getContext().setAuthentication(authResult);
+        this.getRememberMeServices().loginSuccess(request, response, authResult);
+        if (this.eventPublisher != null) {
+            eventPublisher.publishEvent(new InteractiveAuthenticationSuccessEvent(authResult, this.getClass()));
+        }
+        chain.doFilter(request, response);
+        this.getSuccessHandler().onAuthenticationSuccess(request, response, authResult);
+    }
+
 }

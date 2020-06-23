@@ -3,10 +3,7 @@
     <div class="feed-container">
         <div class="feed">
             <h1>Files</h1>
-            <form id="logout-form" action="/logout" method="post">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <input type="submit" value="Logout"/>
-            </form>            <a href="/profile">Profile</a>
+            <a href="/profile">Profile</a>
             <form name="post_form" id="post_form" enctype="multipart/form-data">
                 <div id="namer">
                     <div id="namer-input">

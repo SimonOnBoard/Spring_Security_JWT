@@ -2,50 +2,36 @@ package ru.itis.servlets.security.provider;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import ru.itis.servlets.repositories.UsersRepository;
 import ru.itis.servlets.security.authentification.JwtAuthentication;
 import ru.itis.servlets.security.defails.UserDetailsImpl;
 
-import java.util.Optional;
-
-// проверить аутентификацию пользователя
 @Component
 public class JwtAuthenticationProvider implements AuthenticationProvider {
 
-
+    @Autowired
+    private UsersRepository usersRepository;
     // секретный ключ, которым мы подписываем токен
     @Value("${jwt.secret}")
     private String secret;
 
-    private UsersRepository usersRepository;
-
-    public JwtAuthenticationProvider(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
-    }
-
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String token = authentication.getName();
-
         Claims claims;
         try {
-            // выполняю парсинг токена со своим секретным ключом
              claims =  Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
             throw new AuthenticationCredentialsNotFoundException("Bad token");
         }
-        // создаем UserDetails
-        System.out.println(Long.parseLong(claims.get("sub", String.class)));
-        //Optional<User> user = usersRepository.find(Long.parseLong(claims.get("sub", String.class)));
         UserDetailsImpl userDetails = UserDetailsImpl.builder()
                 .user(usersRepository.find(Long.parseLong(claims.get("sub", String.class))).get())
                 .userId(Long.parseLong(claims.get("sub", String.class)))

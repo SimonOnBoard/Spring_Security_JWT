@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,11 +16,11 @@ import java.util.HashMap;
 @Controller
 public class ProfileController {
 
-    //@PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
-    public ModelAndView getUsersProfile(Authentication authentication){
+    public ModelAndView getUsersProfile(@AuthenticationPrincipal UserDetailsImpl userDetails){
         HashMap<String, Object> params = new HashMap<>();
-        params.put("user",((UserDetailsImpl)((JwtAuthentication)authentication).getDetails()).getUser());
+        params.put("user",userDetails.getUser());
         return new ModelAndView("profile",params);
     }
 

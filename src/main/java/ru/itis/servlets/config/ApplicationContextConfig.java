@@ -8,9 +8,15 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -18,6 +24,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,11 +37,42 @@ import java.util.concurrent.Executors;
 @EnableAspectJAutoProxy
 @PropertySource("classpath:application.properties")
 @Configuration
+@EnableTransactionManagement
 public class ApplicationContextConfig {
-
+    
     @Autowired
     private Environment environment;
 
+    @Bean
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        // создаем адаптер, который позволит Hibernate работать с Spring Data Jpa
+        HibernateJpaVendorAdapter hibernateJpaVendorAdapter = new HibernateJpaVendorAdapter();
+        hibernateJpaVendorAdapter.setDatabase(Database.POSTGRESQL);
+        // создали фабрику EntityManager как Spring-бин
+        LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
+        entityManagerFactory.setDataSource(hikariDataSource(hikariConfig()));
+        entityManagerFactory.setPackagesToScan("ru.itis.orm");
+        entityManagerFactory.setJpaVendorAdapter(hibernateJpaVendorAdapter);
+        entityManagerFactory.setJpaProperties(additionalProperties());
+        return entityManagerFactory;
+    }
+
+    private Properties additionalProperties() {
+        Properties properties = new Properties();
+        properties.setProperty("hibernate.hbm2ddl.auto", "create");
+        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQL95Dialect");
+        properties.setProperty("hibernate.show_sql", "true");
+        return properties;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory){
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setEntityManagerFactory(entityManagerFactory);
+
+        return transactionManager;
+    }
+    
     @Bean
     public MultipartResolver multipartResolver() {
         CommonsMultipartResolver multipartResolver

@@ -1,6 +1,8 @@
 package ru.itis.servlets.controllers;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,8 +14,8 @@ import ru.itis.servlets.security.defails.UserDetailsImpl;
 public class RootController {
     @PreAuthorize("permitAll()")
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ModelAndView getStarter(@AuthenticationPrincipal UserDetailsImpl userDetails){
-        if(userDetails != null) return new ModelAndView("redirect:/profile");
+    public ModelAndView getStarter(Authentication authentication){
+        if(authentication != null) return new ModelAndView("redirect:/profile");
         return new ModelAndView("redirect:/login");
     }
 }
